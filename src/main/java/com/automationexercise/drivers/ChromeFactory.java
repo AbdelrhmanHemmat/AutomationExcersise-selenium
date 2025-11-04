@@ -1,0 +1,82 @@
+package com.automationexercise.drivers;
+
+import com.automationexercise.utils.DataReader.PropertyReader;
+import com.automationexercise.utils.Logs.LogsManager;
+import org.openqa.selenium.PageLoadStrategy;
+import org.openqa.selenium.UnexpectedAlertBehaviour;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+import java.io.File;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ChromeFactory extends AbstractDriver {
+
+    public ChromeOptions getoptions() {
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--remote-allow-origins=*");
+        options.addArguments("--disable-notifications");
+        options.addArguments("--disable-popup-blocking");
+        options.addArguments("--disable-infobars");
+        options.addArguments("--start-maximized");
+        Map<String, Object> prefs = new HashMap<>();
+        String userDir = System.getProperty("user.dir");
+        String downloadPath = userDir +
+                File.separator +
+                "src"
+                + File.separator +
+                "test" +
+                File.separator +
+                "resources" +
+                File.separator +
+                "downloads";
+        prefs.put("profile.default_content_settings.popups", 0);
+        prefs.put("download.prompt_for_download", false);
+        prefs.put("download.default_directory", downloadPath);
+        options.setExperimentalOption("prefs", prefs);
+        options.setUnhandledPromptBehaviour(UnexpectedAlertBehaviour.IGNORE);
+        options.setCapability(CapabilityType.ACCEPT_INSECURE_CERTS, true);
+        options.setCapability(CapabilityType.UNHANDLED_PROMPT_BEHAVIOUR, UnexpectedAlertBehaviour.IGNORE);
+        options.setCapability(CapabilityType.ENABLE_DOWNLOADS, true);
+        options.setAcceptInsecureCerts(true);
+       /* if (PropertyReader.getProperty("extensions").equalsIgnoreCase("enabled"))
+            options.addExtensions(haramBlurExtension);*/
+        switch (PropertyReader.getProperty("executionType")) {
+            case "LocalHeadless" -> options.addArguments("--headless=new");
+            case "Remote" -> {
+                options.addArguments("--disable-gpu");
+                options.addArguments("--disable-extensions");
+                options.addArguments("--headless=new");
+            }
+        }
+        options.setPageLoadStrategy(PageLoadStrategy.EAGER);
+        return options;
+    }
+
+    @Override
+    public WebDriver createDriver() {
+        String executionType = PropertyReader.getProperty("executionType");
+
+        if (executionType.equalsIgnoreCase("Local") || executionType.equalsIgnoreCase("LocalHeadless")) {
+            return new ChromeDriver(getoptions());
+        } else if (executionType.equalsIgnoreCase("Remote")) {
+            try {
+                return new RemoteWebDriver(
+                        new URI("http://" + PropertyReader.getProperty("remoteHost") + ":" +PropertyReader.getProperty("remotePort")+"/wd/hub").toURL(),
+                        getoptions()
+                );
+            } catch (Exception e) {
+                LogsManager.error("Failed to create RemoteWebDriver: " + e.getMessage());
+                throw new RuntimeException(e);
+            }
+        } else {
+            LogsManager.error("Invalid execution type: " + executionType);
+            throw new IllegalArgumentException("Invalid execution type: " + executionType);
+        }
+    }
+    }
