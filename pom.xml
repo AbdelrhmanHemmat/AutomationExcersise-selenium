@@ -131,6 +131,11 @@
             <version>5.5.6</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.maven.surefire</groupId>
+            <artifactId>surefire-testng</artifactId>
+            <version>3.5.3</version>
+        </dependency>
     </dependencies>
 
     <!-- ✅ Build Configuration -->
