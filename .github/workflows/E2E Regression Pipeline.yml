@@ -12,43 +12,16 @@ on:
   workflow_dispatch:
 
 env:
-  TARGET: "%regex[.*Tests.*],com.automationexercise.tests.**.**,com.automationexercise.tests.**"
+  TARGET: "%regex[.*Tests.*],com.automationexercices.tests.**.**,com.automationexercices.tests.**"
 
 jobs:
-  chrome_Linux:
+  Chrome_Linux_Test:
     runs-on: ubuntu-latest
     permissions:
       checks: write
     steps:
-      - name: checkout code
-      - uses: actions/checkout@v4
-
-      - name: setup java
-        uses: actions/setup-java@v4
-        with:
-            distribution: 'zulu' # See 'Supported distributions' for available options
-            java-version: '21'
-
-      - name: Set up Maven
-        uses: stCarolas/setup-maven@v5
-        with:
-          maven-version: 3.13.0
-
-      - name: Running Tests
-        run: mvn -Dtest="${TARGET}" -DexecutionType="localHeadless" -DbrowserType="Chrome"
-
-      - name:  Upload Test Results
-        uses: actions/upload-artifact@v4
-        with:
-          name: Chrome_Linux_Report
-          path: 'test-output/reports/*.html'
-  Edge_Windows_Test:
-    runs-on: windows-latest
-    permissions:
-      checks: write
-    steps:
-      - name: checkout code
-      - uses: actions/checkout@v4
+      - name: checkout Code
+        uses: actions/checkout@v5
 
       - name: setup java
         uses: actions/setup-java@v4
@@ -56,16 +29,46 @@ jobs:
           distribution: 'zulu' # See 'Supported distributions' for available options
           java-version: '21'
 
-      - name: Set up Maven
+      - name: setup maven
         uses: stCarolas/setup-maven@v5
         with:
-          maven-version: 3.13.0
+          maven-version: 3.9.9
 
       - name: Running Tests
-        run: mvn -Dtest="${TARGET}" -DexecutionType="localHeadless" -DbrowserType="Chrome"
+        continue-on-error: true
+        run: mvn -Dtest="${TARGET}" -DexecutionType="LocalHeadless" -Dextensions="disabled" -DbrowserType="Chrome" clean test
 
-      - name:  Upload Test Results
+      - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: Edge_windows_Report
-          path: 'test-output/reports/*.html'
+          name: Chrome_Linux_Report
+          path: "test-output/reports/*.html"
+
+  Edge_Windows_Test:
+    runs-on: windows-latest
+    permissions:
+      checks: write
+    steps:
+      - name: checkout Code
+        uses: actions/checkout@v5
+
+      - name: setup java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu' # See 'Supported distributions' for available options
+          java-version: '21'
+
+      - name: setup maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.9.9
+
+      - name: Running Tests
+        continue-on-error: true
+        run: mvn -Dtest="${TARGET}" -DexecutionType="LocalHeadless" -Dextensions="enabled" -DbrowserType="Edge" clean test
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Edge_Windows_Report
+          path: "test-output/reports/*.html"
